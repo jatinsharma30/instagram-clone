@@ -1,0 +1,38 @@
+<div class="post-footer">
+    <div id='likeBtn' class="row px-2 py-2 mx-1 like">
+        
+        <input type="hidden" name='postId' value='{{post.id}}'>
+        {% if request.user in post.like.all %}
+
+        <img id="likeBtn-{{post.id}}" class="img-logo mx-2" src={% static 'img/heart-992.svg' %} alt="">
+        {% else %}
+        <img id="likeBtn-{{post.id}}" class="img-logo mx-2" src={% static 'img/heart-3510.svg' %} alt="">
+        {% endif %}
+    </div>
+    <div class="row px-2 py-2 mx-1 like">
+        {% if post.like.all|length != 0 %}
+        <img id="first-user-image-{{post.id}}" class="img-logo mx-2 rounded-circle" src={{post.like.first.profileImage.url}} alt="">
+        <p>liked by <b id="first-user-username-{{post.id}}" >{{post.like.first.username}}</b> and <b id="likes-count-{{post.id}}">{{post.like.all|length|add:"-1"}} others</b></p>
+        {% endif %}
+    </div>
+</div>
+<script>
+    likehtml=`<div class="post-footer">
+            <div id='likeBtn' class="row px-2 py-2 mx-1 like">
+                
+                <input type="hidden" name='postId' value='{{post.id}}'>
+                {% if request.user in post.like.all %}
+
+                <img id="likeBtn-{{post.id}}" class="img-logo mx-2" src={% static 'img/heart-992.svg' %} alt="">
+                {% else %}
+                <img id="likeBtn-{{post.id}}" class="img-logo mx-2" src={% static 'img/heart-3510.svg' %} alt="">
+                {% endif %}
+            </div>
+            <div class="row px-2 py-2 mx-1 like">
+                {% if post.like.all|length != 0 %}
+                <img id="first-user-image-{{post.id}}" class="img-logo mx-2 rounded-circle" src={{post.like.first.profileImage.url}} alt="">
+                <p>liked by <b id="first-user-username-{{post.id}}" >{{post.like.first.username}}</b> and <b id="likes-count-{{post.id}}">{{post.like.all|length|add:"-1"}} others</b></p>
+                {% endif %}
+            </div>
+        </div>`
+</script>

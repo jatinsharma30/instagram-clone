@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+<style>
+    .posts {
+        background-color: rgb(255, 255, 255);
+        border: 2px solid rgb(219, 219, 219);
+
+    }
+
+    .modal-dialog,
+    .modal-content {
+        min-width: 80vw;
+        min-height: fit-content;
+        max-height: fit-content;
+        max-width: fit-content;
+    }
+
+
+    #side {
+        background-color: blue;
+        height: 100vh;
+    }
+
+    .post-header {
+
+        height: 2rem;
+        border-bottom: 1px solid black;
+    }
+
+    .post {
+        /* background-image: cover ;
+        height: max-content;
+        width: max-content; */
+        min-height: fit-content;
+        width: 100%;
+        max-height: 80vh;
+    }
+
+    .post img {
+        height: 100%;
+        width: 100%;
+        object-fit: contain;
+    }
+
+    .modal-img {
+        height: 100%;
+        width: 100%;
+        object-fit: inherit;
+    }
+
+    .hover-effect:hover {
+        cursor: pointer;
+    }
+
+    #comment-section {
+        border-top: 1px solid black;
+    }
+
+    #modal-container {
+        display: flex;
+        flex-direction: column;
+
+    }
+
+    .modal-footer {
+        display: flex;
+        flex-direction: row;
+    }
+</style>
+{% endblock css %}
+{% block body %}
+<div class="container">
+    <div class="row">
+        <div class="col-7 mx-4">
+            {% for post in posts %}
+            <div class="row posts my-3">
+                <div class="post-header w-100 h-100 py-2">
+                    <img onclick="showProfile('{{post.user.username}}')"
+                        class="img-logo mx-2 rounded-circle hover-effect" src="{{post.user.profileImage.url}}" alt="">
+                    <span onclick="showProfile('{{post.user.username}}')"
+                        class="hover-effect"><b>{{post.user.username}}</b></span>
+                </div>
+                <div class="post">
+
+                    <img ondblclick='like("{{post.id}}")' src="{{post.post.url}}" class="" alt="">
+
+                </div>
+                <div class="container post-footer my-0">
+                    <div id="like-section-{{post.id}} ">
+                        <div id='likeBtn' class="row px-1 py-1 mx-1 like my-1">
+
+                            <input type="hidden" name='postId' value='{{post.id}}'>
+                            {% if request.user in post.like.all %}
+
+                            <img id="likeBtn-{{post.id}}" onclick='like("{{post.id}}")' class="img-logo mx-1" src={% static 'img/heart-992.svg' %}
+                                alt="">
+                            {% else %}
+                            <img id="likeBtn-{{post.id}}" onclick='like("{{post.id}}")' class="img-logo mx-1" src={% static 'img/heart-3510.svg' %}
+                                alt="">
+                            {% endif %}
+                            <img data-toggle="modal" data-target="#viewPost-{{post.id}}" src={% static 'img/comment.png' %} class="img-logo mx-1" alt="" id="showPost">
+                        </div>
+                        {% if post.like.all|length != 0 %}
+                        <div class="row mb-1  mx-1 like" id="likeInfo-{{post.id}}">
+                            <img id="first-user-image-{{post.id}}" class="img-logo mx-2 rounded-circle"
+                                src={{post.like.first.profileImage.url}} alt="">
+                            <span>liked by <b id="first-user-username-{{post.id}}">{{post.like.first.username}}</b> and
+                                <b id="likes-count-{{post.id}}">{{post.like.all|length|add:"-1"}} others</b></span>
+                        </div>
+                        {% else %}
+                        <div class="row mb-1  mx-1 like" style="display: none;" id="likeInfo-{{post.id}}">
+                            <img id="first-user-image-{{post.id}}" class="img-logo mx-2 rounded-circle" src="" alt="">
+                            <span>liked by <b id="first-user-username-{{post.id}}"></b> and
+                                <b id="likes-count-{{post.id}}"></b></span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="description  mx-2 px-2 mb-1">
+                        <span><b onclick="showProfile('{{post.user.username}}')"
+                                class="hover-effect">{{post.user.username}}</b></span>
+                        {% if post.description %}
+                        <span>{{post.description|safe}}</span>
+                        {% endif %}
+                        <br>
+                        <span class="text-muted">{{post.postUploadTime}}</span>
+                    </div>
+                    {% if post.comments.all %}
+                    <div class="mb-2">
+                        <span class="text-muted hover-effect" data-toggle="modal" data-target="#viewPost-{{post.id}}"
+                            id="showPost">view all comments</span>
+                    </div>
+                    {% endif %}
+                    <div id="comment-section">
+                        <div class="row px-4">
+                            <form action={% url 'addComment' %} method="post"
+                                style="width: 100%;display: flex;flex-direction: row;">
+                                {% csrf_token %}
+                                <input type="hidden" name="postId" value={{post.id}}>
+                                <textarea class="col" id="comment-{{post.id}}" rows="1"
+                                    onkeyup="checkComment('{{post.id}}')" name="comment" placeholder="Add a comment"
+                                    style="border: none;outline: none;height: auto;background-color: rgb(255, 255, 255);"></textarea>
+                                <button id="commentBtn-{{post.id}}" type="submit" class="btn btn-link col-1"
+                                    style="text-decoration: none;" disabled>Post</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% for post in posts %}
+<!--comment Modal -->
+<div class="modal fade " id="viewPost-{{post.id}}" tabindex="-1" role="dialog"
+    aria-labelledby="viewPostTitle-{{post.id}}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg " role="document">
+        <div class="modal-content">
+            <div class="container-fluid">
+                <div class="row  ">
+                    <div class="col-md-7 p-0 m-0" id="k" style="max-height: 60vh;">
+                        <input type="hidden" value="{{post.height}}" id="x">
+                        <img id="z" class="modal-img p-0 m-0" src={{post.post.url}} alt="">
+                    </div>
+                    <div class="col-md-5 " id="modal-container" style="max-height: 60vh;">
+                        <div class="modal-header" id="modal-header">
+                            <img onclick="showProfile('{{post.user.username}}')"
+                                class="img-logo mx-2 rounded-circle hover-effect" src="{{post.user.profileImage.url}}"
+                                alt="">
+                            <h5 onclick="showProfile('{{post.user.username}}')" class="modal-title hover-effect"
+                                id="viewPostTitle-{{post.id}}">{{post.user.username}}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body " style="overflow-y: auto;">
+                            <div class="row ">
+                                <img onclick="showProfile('{{post.user.username}}')"
+                                    class="img-logo mx-2 rounded-circle hover-effect"
+                                    src="{{post.user.profileImage.url}}" alt="">
+                                <h5 onclick="showProfile('{{post.user.username}}')" class="modal-title hover-effect"
+                                    id="viewPostTitle-{{post.id}}">{{post.user.username}}</h5>
+                                {% if post.description %}
+
+                                <span class=" px-2 py-1"> {{post.description}}</span>
+                                {% endif %}
+
+                            </div>
+                            <span class="text-muted mb-4 bs-linebreak">{{post.postUploadTime}}</span>
+                            
+                            {% if post.comments.all %}
+
+                            {% for comment in post.comments.all %}
+                            {% if comment.reply is None %}
+                            <div class="row my-1">
+                                <img onclick="showProfile('{{comment.user.username}}')"
+                                    class="img-logo mx-2 rounded-circle hover-effect"
+                                    src="{{comment.user.profileImage.url}}" alt="">
+                                <h5 onclick="showProfile('{{comment.user.username}}')" class="modal-title hover-effect">
+                                    {{comment.user.username}}</h5>
+                                <span class=" px-2 py-1"> {{comment.body}}</span>
+                            </div>
+                            <div class="row mb-4">
+                                <span class="text-muted mx-2">{{comment.commentPostTime}}</span>
+                                <span class="text-muted mx-2 hover-effect" onclick="reply('{{comment.id}}','{{comment.user.username}}')">Reply</span>
+                            </div>
+                            {% endif %}
+                            {% comment %} reply {% endcomment %}
+                            {% for reply in comment.replies.all  %}
+                            <div class="row my-1 mx-4">
+                                <img onclick="showProfile('{{reply.user.username}}')"
+                                    class="img-logo mx-2 rounded-circle hover-effect"
+                                    src="{{reply.user.profileImage.url}}" alt="">
+                                <h5 onclick="showProfile('{{reply.user.username}}')" class="modal-title hover-effect">
+                                    {{reply.user.username}}</h5>
+                                <span class=" px-2 py-1"> {{reply.body}}</span>
+                            </div>
+                            <div class="row mb-4 mx-4">
+                                <span class="text-muted mx-2">{{reply.commentPostTime}}</span>
+                            </div>
+                            {% endfor %}
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer p-0" id="modal-footer">
+                            <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Save changes</button> -->
+                            <form action={% url 'addComment' %} method="post"
+                                style="width: 100%;display: flex;flex-direction: row;">
+                                {% csrf_token %}
+                                <input type="hidden" name="postId" value={{post.id}}>
+                                <input type="hidden" id="commentId"  name="commentId" value="">
+                                <textarea id="modal-comment-{{post.id}}" rows="1" class=""
+                                    onkeyup="checkComment('{{post.id}}','modal')" name="comment"
+                                    placeholder="Add a comment"
+                                    style="border: none;outline: none;height: auto;background-color: rgb(255, 255, 255);"></textarea>
+                                <button id="modal-commentBtn-{{post.id}}" type="submit" class="btn btn-link "
+                                    style="text-decoration: none" disabled>Post</button>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock body %}
+{% block js %}
+<script>
+    function like(id) {
+        console.log(id)
+        url = 'like'
+        fetch(url, {
+            method: "post",
+            body: JSON.stringify({
+                'postId': id
+            }),
+            headers: {
+                'X-CSRFToken': csrftoken,
+                "content-type": "application/json; charset=UTF-8"
+            }
+        })
+            .then(res => res.json())
+            .then(out => {
+                console.log(out)
+                let likeBtn = document.getElementById(`likeBtn-${id}`)
+                let likeSection = document.getElementById(`like-section-${id}`)
+                let likeInfoSection = document.getElementById(`likeInfo-${id}`)
+                if (out.likeStatus == 'liked') {
+                    likeBtn.setAttribute('src', "{% static 'img/heart-992.svg' %}");
+                    if (likeInfoSection.style.display == 'none') {
+                        likeInfoSection.style.display = 'block';
+                    }
+                    let firstUserImage = document.getElementById(`first-user-image-${id}`);
+                    let firstUserUsername = document.getElementById(`first-user-username-${id}`);
+                    let likeCount = document.getElementById(`likes-count-${id}`);
+                    firstUserImage.setAttribute('src', out.firstUserProfile);
+                    firstUserUsername.innerHTML = out.firstUserUsername;
+                    likeCount.innerHTML = out.count-1 + ' others';
+                }
+                else {
+                    likeBtn.setAttribute('src', "{% static 'img/heart-3510.svg' %}")
+                    if (out.likeStatus == 'no like') {
+                        likeInfoSection.style.display = 'none';
+                    } else {
+                        if (likeInfoSection.style.display == 'none') {
+                            likeInfoSection.style.display = 'block';
+                        }
+                        let firstUserImage = document.getElementById(`first-user-image-${id}`);
+                        let firstUserUsername = document.getElementById(`first-user-username-${id}`);
+                        let likeCount = document.getElementById(`likes-count-${id}`);
+                        firstUserImage.setAttribute('src', out.firstUserProfile);
+                        firstUserUsername.innerHTML = out.firstUserUsername;
+                        likeCount.innerHTML = out.count-1 + ' others';
+                    }
+                }
+            })
+
+            .catch(err => err)
+    }
+    // show profile
+    function showProfile(username) {
+        var base_url = window.location.origin;
+        url = `${base_url}/profile/${username}`
+        window.location.href = url;
+    }
+
+    //comment post btn
+    function checkComment(id, modal = null) {
+        console.log(id, modal)
+        if (modal != null) {
+            var comment = document.getElementById(`modal-comment-${id}`);
+            var commentBtn = document.getElementById(`modal-commentBtn-${id}`);
+        } else {
+            var comment = document.getElementById(`comment-${id}`);
+            var commentBtn = document.getElementById(`commentBtn-${id}`);
+        }
+        // console.log(commentBtn)
+        if (comment.value.length != 0) {
+            commentBtn.disabled = false;
+        } else {
+            commentBtn.disabled = true;
+        }
+    }
+
+    //comment reply
+    function reply(id,username) {
+        let commentId=document.getElementById('commentId');
+        // console.log(username);
+        // console.log(id);
+        commentId.value=id;
+        commentId.nextElementSibling.innerHTML=`@${username} `;
+        // console.log(commentId)
+    }
+</script>
+{% endblock js %}

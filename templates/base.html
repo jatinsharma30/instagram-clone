@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&display=swap" rel="stylesheet">
+
+
+  <title>Hello, world!</title>
+  <style>
+    .navbar-brand {
+      font-size: 2rem !important;
+    }
+
+    .img-logo {
+      height: 30px;
+      width: 30px;
+    }
+    .img-search{
+      height: 40px;
+      width: 40px;
+    }
+    .popover{
+      width:300px;
+      height:auto;   
+      font-size: 2rem; 
+  }
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 12px 20px;
+      box-sizing: border-box;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      background-color: #f8f8f8;
+      font-size: 16px;
+      resize: none;
+    }
+
+    body {
+      background: rgb(250, 250, 250);
+    }
+
+    #preview-container {
+      display: none;
+
+
+      border: 2px solid #dddddd;
+    }
+  </style>
+  {% block css %}{% endblock css %}
+</head>
+
+<body>
+  {% load static %}
+  <div class="container py-0 my-0">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white">
+      <a class="navbar-brand" style="font-family: 'Grand Hotel', cursive;" href="#">Igram</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <!-- <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Link</a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Dropdown
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item" href="#">Action</a>
+                <a class="dropdown-item" href="#">Another action</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">Something else here</a>
+              </div>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link disabled" href="#">Disabled</a>
+            </li>
+          </ul> -->
+        <form class="form-inline ml-auto my-2 my-lg-0 ">
+          <input id="searchUser" class="form-control mr-sm-2 " type="search" placeholder="Search" aria-label="Search"
+           onkeyup="search()" data-container="body" data-toggle="popover" data-html="true" data-trigger="focus"
+            data-placement="bottom" data-content="" autocomplete="off">
+
+        </form>
+
+
+        <a href={% url 'home' %}>
+          <img class="img-logo mx-2" src={% static 'img/home-active.png' %} alt="">
+        </a>
+        <img class="img-logo mx-2" src={% static 'img/message-logo.png' %} alt="">
+        <!-- <img class="img-logo" src="static/img/post-logo-active.png"  alt=""> -->
+        <a href="#" role="button" data-toggle="modal" data-target="#exampleModalCenter">
+          <img class="img-logo mx-2" src={% static 'img/post-logo.png' %} alt="">
+        </a>
+        <img class="img-logo mx-2" src={% static 'img/activity-logo.png' %} alt="">
+        <!-- <img class="img-logo" src="static/img/activity-logo-active.png"  alt=""> -->
+        <img src={% static 'img/explore-logo.png' %}  alt="">
+
+
+        <!-- Example single danger button -->
+        <div class="nav-item dropdown">
+          <a href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true"
+            aria-expanded="false">
+            {% comment %} profile image {% endcomment %}
+            {% if request.user.profileImage %}
+            <img class="img-logo mx-2 " src="{{request.user.profileImage.url}}" alt="" style="border-radius: 100%;">
+            {% else %}
+            <img class="img-logo mx-2" src="static/img/profile.png" alt="">
+            {% endif %}
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item px-0" href={% url 'profile' request.user %}><img class="img-logo mx-2" src={% static 'img/profile-icon.png' %}
+                alt="">Profile</a>
+            <a class="dropdown-item" href="#">Another action</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href={% url 'handleLogout' %}>Logout</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </div>
+  <hr>
+
+
+  <!-- Modal to Add POST-->
+  <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-xs-center" id="exampleModalLongTitle">Create new Post</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form action={% url 'addPost' %} method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="modal-body">
+            <input type="file" id='post' name='post' onchange="checkBtn()">
+            <div id="preview-container" class="my-2">
+              <img src="" alt="" id='image-preview' class="img-thumbnail">
+            </div>
+            <textarea class="my-2" name="description" placeholder="add description for your post"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button id="addPostBtn" type="submit" disabled class="btn btn-primary">upload post</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  {% block body %} {% endblock body %}
+  {% block js %} {% endblock js %}
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+    integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+    crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+    crossorigin="anonymous"></script>
+  <script src={% static 'js/base.js' %}></script>
+</body>
+
+</html>
