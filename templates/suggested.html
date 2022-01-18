@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block css %}
+<style>
+    .profile-img{
+        height: 3rem;
+        width: 3rem;
+    }
+    .hover-effect:hover {
+        cursor: pointer;
+    }
+</style>
+{% endblock css %}
+{% block body %}
+<div class="container my-4" style="width: 40%;border:2px solid rgb(219,219,219)">
+    
+    {% for user in suggestions  %}
+    <div class="row w-100 mx-2 my-2 pr-3">
+        <img class=" px-0 profile-img hover-effect rounded-circle" src="{{user.profileImage.url}}" alt="" onclick="showProfile('{{user.username}}')">
+        <div class=""  onclick="showProfile('{{user.username}}')" >
+        <h2 class="mx-2 mb-0 pb-0 hover-effect">{{user.username}}</h2>
+        <b class="mx-2 text-muted hover-effect"><span>{{user.first_name}}</span></b>
+        </div>
+        <div class="ml-auto">
+            <form action={% url 'follow' %} method="post">
+                {% csrf_token %}
+                <input type="hidden" name='user' value="{{user.id}}">
+        <button type="submit" name="followStatus" value="follow" class="btn btn-link  btn-primary px-0 py-0" style="width: 4rem;height: 2rem;">follow</button>
+    </form>
+    </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock body %}

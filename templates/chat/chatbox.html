@@ -1,0 +1,147 @@
+{% extends 'chat/inbox.html' %}
+
+
+{% block chatBox %}
+<!-- header chat -->
+<div class="row" id="inbox-header" style="background-color: inherit;height: min-content;">
+    {% if request.user.username == messages.first.username %}
+    <div class="row py-2 w-100">
+        <div class="col-1 hover-effect">
+            <img onclick="showProfile('{{messages.second.username}}')" src='{{messages.second.profileImage.url}}'
+                class="mx-3 rounded-circle" alt="" style="height: 2rem;">
+        </div>
+        <div class="col hover-effect">
+            <b onclick="showProfile('{{messages.second.username}}')">{{messages.second.username}}</b>
+        </div>
+    </div>
+    {% else %}
+
+    <div class="row py-2 ">
+        <div class="col-md-4" >
+            <img onclick="showProfile('{{messages.first.username}}')" src='{{messages.first.profileImage.url}}'
+                class="chat-img mx-2 rounded-circle hover-effect" alt="">
+        </div>
+        <div class="col-md ml-4 mt-2 hover-effect">
+
+            <b onclick="showProfile('{{messages.first.username}}')">{{messages.first.username}}</b>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+<!-- chat messages -->
+<div class="row " id="inbox-messages" style="background-color: inherit;height: 100%;overflow-x: auto;">
+    <div class="container" id="chat-log">
+        {% for chat in messages.chatmessage_set.all %}
+        {% if chat.user == request.user %}
+
+        <p class="text-right w-100 rounded-circle py-2" style="height: min-content;"><span class="py-2 px-3 "
+                style="background-color: rgb(239,239,239) ;height: max-content;display: inline-block;max-width: 50%;word-wrap:break-word">
+                {{ chat.message }}</span></p>
+
+        {% else %}
+
+        <p class="text-left w-100 rounded-circle py-2" style="height: min-content;background-color: inherit;"><span class="py-2 px-3"
+            style="background-color: inherit;border: 1px solid black ;height: fit-content;display: inline-block;max-width: 50%;word-wrap:break-word">{{ chat.message}}</span></p>
+</p>
+
+        {% endif %}
+        {% endfor %}
+        
+    </div>
+</div>
+<div class="row" id="inbox-sent-message" style="background-color: inherit;height: 12%;width: inherit;">
+    <form id="chat-form" action={% url 'postMessage' %} method="post" class=" mx-2 my-2" style="border: 1px solid black; width:100%;border-radius: 20px 20px 20px 20px;background-color: inherit;">{% csrf_token %}
+        <input type="hidden" name="threadId" value="{{messages.id}}">
+    <input id="chat-message-input" type="text" name="message" class="mx-3 my-2" style="width: 85%;border: none;border: none;outline: none;height: auto;" placeholder="Message..." onkeyup="checkSendBtn(this)">
+    <button id="sendBtn" type="submit" class="btn btn-link col-1"
+                                    style="text-decoration: none;" disabled>Send</button>
+</form>
+</div>
+{% endblock chatBox %}
+{% block js %}
+<script>
+    
+
+function checkSendBtn(e) {
+    let sendBtn=document.getElementById('sendBtn');
+    if (e.value.length==0) {
+        sendBtn.disabled=true;
+    }else{
+        sendBtn.disabled=false;
+    }
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.js"></script>
+        <script>
+
+            // make scroll bar at end
+            function scrollBarEnd() {
+                var chatHistory = document.getElementById("inbox-messages");
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }
+            scrollBarEnd();
+
+            // console.log(window.location)
+
+        const chatSocket = new ReconnectingWebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/'
+            + window.location.pathname
+        );
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            console.log(data);
+            // document.querySelector('#chat-log').value += (data.message + '\n');
+            if ('{{request.user.username}}'== `${data.message.user}`) {
+                document.querySelector('#chat-log').innerHTML+=`<p class="text-right w-100 rounded-circle py-2" style="height: min-content;"><span class="py-2 px-3 "
+                style="background-color: rgb(239,239,239) ;height: max-content;display: inline-block;max-width: 50%;word-wrap:break-word">
+                ${data.message.message}</span></p>`
+            }
+            else{
+
+                document.querySelector('#chat-log').innerHTML+=`<p class="text-left w-100 rounded-circle py-2" style="height: min-content;background-color: inherit;"><span class="py-2 px-3"
+                style="background-color: inherit;border: 1px solid black ;height: fit-content;display: inline-block;max-width: 50%;word-wrap:break-word">${data.message.message}</span></p>`
+            }
+            scrollBarEnd();
+        };
+        chatSocket.onopen=function(e){
+            console.log("connected")
+            let chatForm=document.getElementById('chat-form');
+            chatForm.addEventListener('submit',function (event) {
+                event.preventDefault();
+            })
+        }
+        chatSocket.onclose = function(e) {
+            console.log("close",e)
+            console.error('Chat socket closed unexpectedly');
+        };
+
+        document.querySelector('#chat-message-input').focus();
+        document.querySelector('#chat-message-input').onkeyup = function(e) {
+            let sendBtn=document.getElementById('sendBtn');
+        if (e.value==0) {
+            sendBtn.disabled=true;
+        }else{
+            sendBtn.disabled=false;
+        }
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#sendBtn').click();
+            }
+        };
+
+        document.querySelector('#sendBtn').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const message = messageInputDom.value;
+            if (message!=0) {
+                chatSocket.send(JSON.stringify({
+                'message': message
+            }));
+            messageInputDom.value = '';
+            }
+            
+        };
+    </script>
+{% endblock js %}

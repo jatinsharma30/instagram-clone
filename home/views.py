@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate,login,logout
 from django.contrib.auth.decorators import login_required
 from .models import Comment, User,Post,Follow
 
-
+from django.db.models import Q
 
 # Create your views here.
 @login_required
@@ -22,9 +22,29 @@ def home(request):
         posts=Post.objects.filter(user__in=followings.follow.all()).order_by('upload_date')
     except Follow.DoesNotExist:
         followings=None
-
-    params={'user':user,'posts':posts}
+    if followings==None:
+        suggestion=User.objects.all().exclude(id=request.user.id)[:5]
+    else:
+        print(followings.follow.all())
+        suggestion=User.objects.all().exclude(id__in=followings.follow.all()).exclude(id=request.user.id)[:5]
+    print(suggestion)
+    params={'user':user,'posts':posts,'suggestions':suggestion}
     return render(request,'home.html',params)
+
+@login_required
+def suggested(request):
+    try:
+        followings=Follow.objects.get(user=request.user)
+        posts=Post.objects.filter(user__in=followings.follow.all()).order_by('upload_date')
+    except Follow.DoesNotExist:
+        followings=None
+    if followings==None:
+        suggestion=User.objects.all().exclude(id=request.user.id)
+    else:
+        print(followings.follow.all())
+        suggestion=User.objects.all().exclude(id__in=followings.follow.all()).exclude(id=request.user.id)
+    param={'suggestions':suggestion}
+    return render(request,'suggested.html',param)
 
 def handleLogin(request):
     if request.method=='POST':
@@ -58,6 +78,7 @@ def handleSignup(request):
         else:
             user = User.objects.create_user(username=username,email=email,password=password,first_name=name)
             user.save()
+            login(request,user)
             return redirect('home')
     return render(request,'signup.html')
 
@@ -128,11 +149,12 @@ def follow(request):
         if status=='follow':
             follow_.follow.add(user)
             follow_.save()
+            
         else:
             follow_.follow.remove(user)
         user=User.objects.get(id=user)
-    return redirect(f'profile/{user.username}')
-    # return redirect(request.META['HTTP_REFERER']) 
+    # return redirect(f'profile/{user.username}')
+    return redirect(request.META['HTTP_REFERER']) 
 
 @login_required
 def like(request):
@@ -171,10 +193,74 @@ def addComment(request):
         post=Post.objects.get(id=post_)
         commentId=request.POST['commentId']
         if commentId!="":
-            reply=Comment.objects.get(id=commentId);
+            reply=Comment.objects.get(id=commentId)
             comment_=Comment.objects.create(user=request.user,post=post,body=comment,reply=reply)
+            print('reply')
         else:
             comment_=Comment.objects.create(user=request.user,post=post,body=comment)
+            print('n')
         print(post_,comment)
         comment_.save()
-    return redirect('home')
+    return redirect(request.META['HTTP_REFERER']) 
+
+def changeProfile(request):
+    if request.method=='POST':
+        img=request.FILES['profile']
+        user=User.objects.get(id=request.user.id)
+        user.profileImage=img
+        user.save()
+    return redirect(request.META['HTTP_REFERER'])  
+
+@login_required
+def updateProfileInfo(request):
+    if request.method=='POST':
+        username=request.POST['username']   
+        name=request.POST['name']   
+        bio=request.POST['bio']   
+        email=request.POST['email']
+        user=User.objects.get(id=request.user.id)
+        if username!="":
+            user.username=username
+        if name!="":
+            user.first_name=name
+        if bio!="":
+            user.discription=bio
+        if email!="":
+            user.email=email
+        user.save()
+    return redirect(request.META['HTTP_REFERER'])  
+
+def isUsernameValid(request):
+    if request.method=='POST':
+        data = json.loads(request.body)
+        username=data['username']
+        print(User.objects.filter(username=username).exists())
+        if username == request.user.username:
+            return JsonResponse('available',safe=False)
+        elif username.isalnum()==False:
+            return JsonResponse('not available',safe=False)           
+        elif User.objects.filter(username=username).exists():
+            return JsonResponse('not available',safe=False)           
+        else:
+            return JsonResponse('available',safe=False)
+
+@login_required
+def changePassword(request):
+    if request.method=='POST':
+        password=request.POST['password']
+        password1=request.POST['password1']
+        oldPassword=request.POST['oldPassword']
+        if password==password1 and request.user.check_password(oldPassword):
+
+            try:
+                user=User.objects.get(id=request.user.id)
+                newPassword=user.set_password(password)
+                user.save()
+                messages.success(request,'password changed!!')
+                return redirect('editProfile')    
+            except Exception as e:
+                messages.error(request,'wrong password!! issue')
+        else:
+            messages.error(request,'wrong password!!')
+    return redirect(request.META['HTTP_REFERER'])    
+

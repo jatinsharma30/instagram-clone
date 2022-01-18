@@ -1,4 +1,5 @@
 
+
 // to check image field is empty or not
 function checkBtn() {
     let post = document.getElementById('post');
@@ -38,6 +39,13 @@ function getCookie(name) {
 }
 const csrftoken = getCookie('csrftoken');
 
+// show profile
+function showProfile(username) {
+    var base_url = window.location.origin;
+    url = `${base_url}/profile/${username}`
+    window.location.href = url;
+}
+
 // search
 function search() {
     let username = document.getElementById('searchUser').value
@@ -66,7 +74,7 @@ function search() {
                 result = `<table class="table table-hover table-white">
                 <tbody>`
                 out.forEach(user => {
-                    result += `<tr data-href="${base_url}/profile/${user.username}">               
+                    result += `<tr onClick="showProfile('${user.username}')" class="hover-effect">               
                                 <td>${user.username}</td>
                                 <td><img class="img-search mx-2 " src='${base_url}/media/${user.profileImage}' alt="" style="border-radius: 100%;"></td>
                                 </tr>`
@@ -81,17 +89,8 @@ function search() {
 
     // show popover for search results
     $('#searchUser').popover('show');
-    const rows= document.querySelectorAll("tr[data-href]");
-    if (rows) {
-        
-        console.log(rows);
-        rows.forEach(row => {
-            row.addEventListener('click',()=>{
-                    window.location.href=row.dataset.href;
-            })
-        });
-    }else{
-        console.log('n')
-    }
 }
+$.fetch({
+    cache: false,
+  });
 

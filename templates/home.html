@@ -49,9 +49,7 @@
         object-fit: inherit;
     }
 
-    .hover-effect:hover {
-        cursor: pointer;
-    }
+    
 
     #comment-section {
         border-top: 1px solid black;
@@ -73,6 +71,7 @@
 <div class="container">
     <div class="row">
         <div class="col-7 mx-4">
+            {% if posts %}
             {% for post in posts %}
             <div class="row posts my-3">
                 <div class="post-header w-100 h-100 py-2">
@@ -93,11 +92,9 @@
                             <input type="hidden" name='postId' value='{{post.id}}'>
                             {% if request.user in post.like.all %}
 
-                            <img id="likeBtn-{{post.id}}" onclick='like("{{post.id}}")' class="img-logo mx-1" src={% static 'img/heart-992.svg' %}
-                                alt="">
+                            <img id="likeBtn-{{post.id}}" onclick='like("{{post.id}}")' class="img-logo mx-1" src={% static 'img/heart-992.svg' %} alt="">
                             {% else %}
-                            <img id="likeBtn-{{post.id}}" onclick='like("{{post.id}}")' class="img-logo mx-1" src={% static 'img/heart-3510.svg' %}
-                                alt="">
+                            <img id="likeBtn-{{post.id}}" onclick='like("{{post.id}}")' class="img-logo mx-1" src={% static 'img/heart-3510.svg' %} alt="">
                             {% endif %}
                             <img data-toggle="modal" data-target="#viewPost-{{post.id}}" src={% static 'img/comment.png' %} class="img-logo mx-1" alt="" id="showPost">
                         </div>
@@ -148,10 +145,53 @@
                 </div>
             </div>
             {% endfor %}
+            {% else %}
+            <h1>follow Users to see posts</h1>
+            {% endif %}
         </div>
+        <div class="col mx-4 w-100">
+            <div class="row my-4">
+                <div class="row">
+                    <img class="profile-img hover-effect rounded-circle" src="{{request.user.profileImage.url}}" alt=""
+                        onclick="showProfile('{{request.user.username}}')">
+                    <div onclick="showProfile('{{request.user.username}}')" class="">
+                        <h2 class="mx-2 mb-0 pb-0 hover-effect">{{request.user.username}}</h2>
+                        <b class="text-muted mx-2 my-1 hover-effect"><span>{{request.user.first_name}}</span></b>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <h5 class="text-muted">Suggestions For You</h5>
+                <div class="ml-auto">
+                    <a href={% url 'suggested' %} class="mr-4 pr-2"><b class="text-dark ">see all</b></a>
+                </div>
+            </div>
+            <div class="w-100">
+                {% for user in suggestions %}
+                <div class="row w-100">
+                    <img class=" px-0 profile-img hover-effect rounded-circle" src="{{user.profileImage.url}}" alt=""
+                        onclick="showProfile('{{user.username}}')">
+                    <div class="" onclick="showProfile('{{user.username}}')">
+                        <h2 class="mx-2 mb-0 pb-0 hover-effect">{{user.username}}</h2>
+                        <b class="mx-2 text-muted hover-effect"><span>{{user.first_name}}</span></b>
+                    </div>
+                    <div class="ml-auto">
+                        <form action={% url 'follow' %} method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name='user' value="{{user.id}}">
+                            <button type="submit" name="followStatus" value="follow"
+                                class="btn btn-link  btn-primary px-0 py-0"
+                                style="width: 4rem;height: 2rem;">follow</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
     </div>
 </div>
-
+<!-- {% block homeActive %}{% static 'img/home-active.png' %}{% endblock homeActive %} -->
 {% for post in posts %}
 <!--comment Modal -->
 <div class="modal fade " id="viewPost-{{post.id}}" tabindex="-1" role="dialog"
@@ -189,7 +229,7 @@
 
                             </div>
                             <span class="text-muted mb-4 bs-linebreak">{{post.postUploadTime}}</span>
-                            
+
                             {% if post.comments.all %}
 
                             {% for comment in post.comments.all %}
@@ -204,11 +244,12 @@
                             </div>
                             <div class="row mb-4">
                                 <span class="text-muted mx-2">{{comment.commentPostTime}}</span>
-                                <span class="text-muted mx-2 hover-effect" onclick="reply('{{comment.id}}','{{comment.user.username}}')">Reply</span>
+                                <span class="text-muted mx-2 hover-effect"
+                                    onclick="reply('{{comment.id}}','{{comment.user.username}}')">Reply</span>
                             </div>
                             {% endif %}
                             {% comment %} reply {% endcomment %}
-                            {% for reply in comment.replies.all  %}
+                            {% for reply in comment.replies.all %}
                             <div class="row my-1 mx-4">
                                 <img onclick="showProfile('{{reply.user.username}}')"
                                     class="img-logo mx-2 rounded-circle hover-effect"
@@ -231,7 +272,7 @@
                                 style="width: 100%;display: flex;flex-direction: row;">
                                 {% csrf_token %}
                                 <input type="hidden" name="postId" value={{post.id}}>
-                                <input type="hidden" id="commentId"  name="commentId" value="">
+                                <input type="hidden" id="commentId" name="commentId" value="">
                                 <textarea id="modal-comment-{{post.id}}" rows="1" class=""
                                     onkeyup="checkComment('{{post.id}}','modal')" name="comment"
                                     placeholder="Add a comment"
@@ -282,7 +323,7 @@
                     let likeCount = document.getElementById(`likes-count-${id}`);
                     firstUserImage.setAttribute('src', out.firstUserProfile);
                     firstUserUsername.innerHTML = out.firstUserUsername;
-                    likeCount.innerHTML = out.count-1 + ' others';
+                    likeCount.innerHTML = out.count - 1 + ' others';
                 }
                 else {
                     likeBtn.setAttribute('src', "{% static 'img/heart-3510.svg' %}")
@@ -297,7 +338,7 @@
                         let likeCount = document.getElementById(`likes-count-${id}`);
                         firstUserImage.setAttribute('src', out.firstUserProfile);
                         firstUserUsername.innerHTML = out.firstUserUsername;
-                        likeCount.innerHTML = out.count-1 + ' others';
+                        likeCount.innerHTML = out.count - 1 + ' others';
                     }
                 }
             })
@@ -330,12 +371,12 @@
     }
 
     //comment reply
-    function reply(id,username) {
-        let commentId=document.getElementById('commentId');
+    function reply(id, username) {
+        let commentId = document.getElementById('commentId');
         // console.log(username);
         // console.log(id);
-        commentId.value=id;
-        commentId.nextElementSibling.innerHTML=`@${username} `;
+        commentId.value = id;
+        commentId.nextElementSibling.innerHTML = `@${username} `;
         // console.log(commentId)
     }
 </script>

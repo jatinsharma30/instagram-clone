@@ -5,7 +5,11 @@
         margin: 0px;
         padding: 0;
     }
-
+    .modal-img {
+        height: 100%;
+        width: 100%;
+        object-fit: inherit;
+    }
     .profile-image {
         height: 30vh;
         width: 18vw;
@@ -16,19 +20,29 @@
     .text-font {
         font-size: 1.3rem;
     }
+    #modal-container {
+        display: flex;
+        flex-direction: column;
+
+    }
+
+    .modal-footer {
+        display: flex;
+        flex-direction: row;
+    }
 </style>
 {% endblock css %}
 {% block body %}
 
-<div class="container">
+<div class="container my-4">
     <!-- upper part -->
     <div class="row">
         <div class="col-4">
 
             {% if user.profileImage %}
-            <img class="profile-image mx-4" src="{{user.profileImage.url}}" alt="">
+            <img id="profileImg" class="profile-image mx-4" src="{{user.profileImage.url}}" alt="">
             {% else %}
-            <img class="profile-image" src="/static/img/profile.png" alt="">
+            <img id="profileImg" class="profile-image" src="/static/img/profile.png" alt="">
             {% endif %}
         </div>
         <div class="col">
@@ -41,11 +55,11 @@
                     <a href={% url 'editProfile' %}  class="btn btn-outline-dark btn-lg my-1">Edit
                         Profile</a>
               </div>
-                <div class="col">
+                {% comment %} <div class="col">
                     <a href="#">
                         <img class="my-1" src="/static/img/settings-logo.png" alt="">
                     </a>
-                </div>
+                </div> {% endcomment %}
                 {% else %}
                 <div class="col">
                     <form action={% url 'follow' %} method="post">
@@ -64,10 +78,10 @@
                 <div class="col text-center">
                     <span class="text-font"><b>{{posts|length}}</b> posts</span>
                 </div>
-                <div class="col text-center">
+                <div class="col text-center hover-effect" data-toggle="modal" data-target="#showFollowers">
                     <span class="text-font"><b>{{ followers.count}}</b> followers</span>
                 </div>
-                <div class="col text-center">
+                <div class="col text-center hover-effect" data-toggle="modal" data-target="#showFollowings">
                     {% if following.follow %}
                     <span class="text-font"><b>{{ following.follow.count }}</b> following</span>
                     {% else %}
@@ -86,14 +100,256 @@
         </div>
     </div>
 
-    <div style="height: 10px; background-color: #EAEFF5"></div>
+    <div style="height: 10px; background-color: #EAEFF5" class="my-4"></div>
     <!-- posts part -->
-    <div class="row">
+    <div class="row ">
         {% for post in posts %}
-        <div class="col-4 my-2">
+        <!--  -->
+        <div class="col-4 my-2 hover-effect" data-toggle="modal" data-target="#viewPost-{{post.id}}"  id="showPost">
         <img src="{{post.post.url}}" alt="" height="" style="width:100%; height: 300px;" class="my-2">
     </div>
         {% endfor %}
     </div>
 </div>
+
+<!--post Modal -->
+{% for post in posts %}
+<div class="modal fade " id="viewPost-{{post.id}}" tabindex="-1" role="dialog"
+    aria-labelledby="viewPostTitle-{{post.id}}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg " role="document">
+        <div class="modal-content">
+            <div class="container-fluid">
+                <div class="row  ">
+                    <div class="col-md-7 p-0 m-0" id="k" style="max-height: 60vh;">
+                        <input type="hidden" value="{{post.height}}" id="x">
+                        <img id="z" class="modal-img p-0 m-0" src={{post.post.url}} alt="">
+                    </div>
+                    <div class="col-md-5 " id="modal-container" style="max-height: 60vh;">
+                        <div class="modal-header" id="modal-header">
+                            <img onclick="showProfile('{{post.user.username}}')"
+                                class="img-logo mx-2 rounded-circle hover-effect" src="{{post.user.profileImage.url}}"
+                                alt="">
+                            <h5 onclick="showProfile('{{post.user.username}}')" class="modal-title hover-effect"
+                                id="viewPostTitle-{{post.id}}">{{post.user.username}}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body " style="overflow-y: auto;">
+                            <div class="row ">
+                                <img onclick="showProfile('{{post.user.username}}')"
+                                    class="img-logo mx-2 rounded-circle hover-effect"
+                                    src="{{post.user.profileImage.url}}" alt="#">
+                                <h5 onclick="showProfile('{{post.user.username}}')" class="modal-title hover-effect"
+                                    id="viewPostTitle-{{post.id}}">{{post.user.username}}</h5>
+                                {% if post.description %}
+
+                                <span class=" px-2 py-1"> {{post.description}}</span>
+                                {% endif %}
+
+                            </div>
+                            <span class="text-muted mb-4 bs-linebreak">{{post.postUploadTime}}</span>
+                            
+                            {% if post.comments.all %}
+
+                            {% for comment in post.comments.all %}
+                            {% if comment.reply is None %}
+                            <div class="row my-1">
+                                <img onclick="showProfile('{{comment.user.username}}')"
+                                    class="img-logo mx-2 rounded-circle hover-effect"
+                                    src="{{comment.user.profileImage.url}}" alt="#">
+                                <h5 onclick="showProfile('{{comment.user.username}}')" class="modal-title hover-effect">
+                                    {{comment.user.username}}</h5>
+                                <span class=" px-2 py-1"> {{comment.body}}</span>
+                            </div>
+                            <div class="row mb-4">
+                                <span class="text-muted mx-2">{{comment.commentPostTime}}</span>
+                                <span class="text-muted mx-2 hover-effect" onclick="reply('{{comment.id}}','{{comment.user.username}}')">Reply</span>
+                            </div>
+                            {% endif %}
+                            {% comment %} reply {% endcomment %}
+                            {% for reply in comment.replies.all  %}
+                            <div class="row my-1 mx-4">
+                                <img onclick="showProfile('{{reply.user.username}}')"
+                                    class="img-logo mx-2 rounded-circle hover-effect"
+                                    src="{{reply.user.profileImage.url}}" alt="#">
+                                <h5 onclick="showProfile('{{reply.user.username}}')" class="modal-title hover-effect">
+                                    {{reply.user.username}}</h5>
+                                <span class=" px-2 py-1"> {{reply.body}}</span>
+                            </div>
+                            <div class="row mb-4 mx-4">
+                                <span class="text-muted mx-2">{{reply.commentPostTime}}</span>
+                            </div>
+                            {% endfor %}
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer p-0" id="modal-footer">
+                            <!-- <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Save changes</button> -->
+                            <form action={% url 'addComment' %} method="post"
+                                style="width: 100%;display: flex;flex-direction: row;">
+                                {% csrf_token %}
+                                <input type="hidden" name="postId" value={{post.id}}>
+                                <input type="hidden" id="commentId"  name="commentId" value="">
+                                <textarea id="modal-comment-{{post.id}}" rows="1" class=""
+                                    onkeyup="checkComment('{{post.id}}','modal')" name="comment"
+                                    placeholder="Add a comment"
+                                    style="border: none;outline: none;height: auto;background-color: rgb(255, 255, 255);"></textarea>
+                                <button id="modal-commentBtn-{{post.id}}" type="submit" class="btn btn-link "
+                                    style="text-decoration: none" disabled>Post</button>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+
+  
+ 
+
+    <!--followers list Modal -->
+    <div class="modal fade" id="showFollowers" tabindex="-1" role="dialog" aria-labelledby="showFollowersTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title ml-auto" id="showFollowersTitle">Followers</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body" style="max-height: 60vh;overflow-y: auto;">
+               
+                {% for follower in followers %}
+                <div class="row w-100 mx-2">
+                    <img class=" px-0 profile-img hover-effect rounded-circle" src="{{follower.user.profileImage.url}}" alt=""
+                        onclick="showProfile('{{follower.user.username}}')">
+                    <div class="" onclick="showProfile('{{follower.user.username}}')">
+                        <h2 class="mx-2 mb-0 pb-0 hover-effect">{{follower.user.username}}</h2>
+                        <b class="mx-2 text-muted hover-effect"><span>{{follower.user.first_name}}</span></b>
+                    </div>
+                    <div class="ml-auto">
+                        <form action={% url 'follow' %} method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name='user' value="{{follower.user.id}}">
+                            
+                            {% if follower.user in following.follow.all %}
+                            <button type="submit" name="followStatus" value="unfollow"
+                                class="btn btn-link-secondary  btn-secondary px-2 mx-2 py-1"
+                                style="width: 5rem;height: 2rem;">unfollow</button>
+                            {% else %}
+
+                            <button type="submit" name="followStatus" value="follow"
+                                class="btn btn-link  btn-primary px-0 py-0"
+                                style="width: 4rem;height: 2rem;">follow</button>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+        <!--following llist Modal -->
+  <div class="modal fade" id="showFollowings" tabindex="-1" role="dialog" aria-labelledby="showFollowingsTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title ml-auto" id="showFollowingsTitle">following</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" style="max-height: 60vh;overflow-y: auto;">
+            {% for user in following.follow.all %}
+                <div class="row w-100 mx-2">
+                    <img class=" px-0 profile-img hover-effect rounded-circle" src="{{user.profileImage.url}}" alt=""
+                        onclick="showProfile('{{user.username}}')">
+                    <div class="" onclick="showProfile('{{user.username}}')">
+                        <h2 class="mx-2 mb-0 pb-0 hover-effect">{{user.username}}</h2>
+                        <b class="mx-2 text-muted hover-effect"><span>{{user.first_name}}</span></b>
+                    </div>
+                    <div class="ml-auto">
+                        <form action={% url 'follow' %} method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name='user' value="{{user.id}}">
+                            <button type="submit" name="followStatus" value="unfollow"
+                                class="btn btn-link-secondary  btn-secondary px-2 mx-2 py-1"
+                                style="width: 5rem;height: 2rem;">unfollow</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+                {% if following == None or following.follow.count == 0 %}
+                <h6 class="text-center">you are not following anyone</h6>
+                {% endif %}
+                <hr>
+                <a href={% url 'suggested' %}><h4 class="text-center">Suggestions For You</h4></a>
+        </div>
+    
+        {% comment %} <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button id="addProfileBtn" type="submit" disabled class="btn btn-primary">change</button>
+        </div> {% endcomment %}
+   
+      </div>
+    </div>
+  </div>
+
 {% endblock body %}
+{% block js %}
+<script>
+    // show profile
+    function showProfile(username) {
+        var base_url = window.location.origin;
+        url = `${base_url}/profile/${username}`
+        window.location.href = url;
+    }
+    
+    //comment post btn
+    function checkComment(id, modal = null) {
+        console.log(id, modal)
+        if (modal != null) {
+            var comment = document.getElementById(`modal-comment-${id}`);
+            var commentBtn = document.getElementById(`modal-commentBtn-${id}`);
+        } else {
+            var comment = document.getElementById(`comment-${id}`);
+            var commentBtn = document.getElementById(`commentBtn-${id}`);
+        }
+        // console.log(commentBtn)
+        if (comment.value.length != 0) {
+            commentBtn.disabled = false;
+        } else {
+            commentBtn.disabled = true;
+        }
+    }
+
+    //comment reply
+    function reply(id,username) {
+        let commentId=document.getElementById('commentId');
+        // console.log(username);
+        // console.log(id);
+        // console.log(commentId);
+        commentId.value=id;
+        // console.log(commentId.nextElementSibling)
+        commentId.nextElementSibling.innerHTML=`@${username} `;
+        // console.log(commentId.nextElementSibling)
+        // console.log(commentId)
+    }
+    '{% if user == request.user %}'
+    let profileImg=document.getElementById("profileImg");
+    profileImg.setAttribute('data-toggle',"modal")
+    profileImg.setAttribute('data-target',"#addProfile")
+    profileImg.classList.add("hover-effect");
+    '{% endif %}'
+</script>
+{% endblock js %}

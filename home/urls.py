@@ -15,4 +15,9 @@ urlpatterns = [
     path('test',views.test,name='test'),
     path('like',views.like,name='like'),
     path('addComment',views.addComment,name='addComment'),
+    path('suggested',views.suggested,name='suggested'),
+    path('changeProfile',views.changeProfile,name='changeProfile'),#profilePicture
+    path('updateProfileInfo',views.updateProfileInfo,name='updateProfileInfo'),
+    path('isUsernameValid',views.isUsernameValid,name='isUsernameValid'),
+    path('changePassword',views.changePassword,name='changePassword'),
 ]

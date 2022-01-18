@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block css %}
+<style>
+    .chat-img{
+        height: 4rem;
+        width: 4rem;
+    }
+    .hover-effect :hover{
+        cursor: pointer;
+    }
+    .hover-inbox :hover{
+        /* cursor: pointer; */
+        background-color: rgb(219, 219, 219);
+    }
+    #inbox-chat-empty{
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        justify-content: center;
+        height: 100% ;
+    }
+    #chat-suggestions{
+        display: flex;
+        flex-direction: row;
+        
+        gap: 2rem ;
+    }
+    .hover-not :hover{
+        background-color: none;
+    }
+</style>
+{% endblock css %}
+{% block inboxActive %}{% static 'img/message-logo-active.png' %} {% endblock inboxActive %}
+{% block body %}
+<div class="container my-4" style="background-color: rgb(255, 255, 255);height:80vh;">
+    <div class="row" style="height: 100%;border: 1px solid rgb(219, 219, 219);"" >   
+    <div class="col-md-4  " style="background-color: rgb(255, 255, 255);height: 100%;overflow-y: auto;" >
+        <div class="row hover-not" style="border: 1px solid rgb(219, 219, 219);">          
+            <img class="chat-img ml-auto my-0 hover-effect" data-toggle="modal" data-target="#SendMessageModal" src={% static 'img/create-chat.png' %} alt="">
+        </div>
+        <div class="hover-inbox">
+        {% for chat in qs %}
+        {% if request.user.username == chat.first.username %}
+        <a href={% url 'chatBox' chat.second.username %} style="text-decoration:none; color: inherit;">
+        <div class="row py-2 ">
+            <div class="col-4">
+                <img src='{{chat.second.profileImage.url}}' class="chat-img mx-2 rounded-circle" alt="">
+            </div>
+            <div class="col">
+
+                <b>{{chat.second.username}}</b>
+            </div>
+        </div>
+    </a>
+            {% else %}
+            <a href={% url 'chatBox' chat.first.username %} style="text-decoration:none; color: inherit;">
+                <div class="row py-2 ">
+            <div class="col-4">
+                <img src='{{chat.first.profileImage.url}}' class="chat-img mx-2 rounded-circle" alt="">
+            </div>
+            <div class="col">
+
+                <b>{{chat.first.username}}</b>
+            </div>
+        </div>
+    </a>
+            {% endif %}
+        {% endfor %}
+    </div>
+    </div>
+    <div class="col-md-8 d-flex flex-column " style="background-color: inherit;height: 100%;border-left: 4px solid rgb(219, 219, 219);">
+        {% block chatBox %}
+        <div class="container" id="inbox-chat-empty">
+            <img class='mb-7 pb-5' src={% static 'img/empty-dm-image.png' %} alt="" style="background-color: inherit;">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#SendMessageModal">
+                Send messages
+              </button>
+        </div>
+        {% endblock chatBox %}
+    </div>
+</div>
+</div>
+
+<!-- send messages modal -->
+<!-- Button trigger modal -->
+
+  
+  <!-- Modal -->
+  <div class="modal fade" id="SendMessageModal" tabindex="-1" role="dialog" aria-labelledby="SendMessageModal" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="SendMessageModalTitle">New Message</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <b>suggested:</b>
+          {% if following.follow.all|length == 0  %}
+          <h4>Kindly follow others to Send message</h4>
+
+          {% else %}
+          {% for user in following.follow.all  %}
+          <div class="row my-1" id="chat-suggestions">
+              <img class="chat-img mx-2 rounded-circle" src={{user.profileImage.url}} alt="">
+              <b class="my-2"><span>{{user.username}}</span></b>
+              <a  type="button" href={% url 'chatBox' user.username %} class="btn btn-link  btn-primary btn-sm my-1 ml-auto mx-3" style="height: 50%;">send</a>
+          </div>
+
+          <hr>
+          {% endfor %}
+          {% endif %}
+        </div>
+        <!-- <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary">Save changes</button>
+        </div> -->
+      </div>
+    </div>
+  </div>
+{% endblock body %}
