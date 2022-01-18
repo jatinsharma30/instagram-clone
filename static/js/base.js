@@ -90,7 +90,4 @@ function search() {
     // show popover for search results
     $('#searchUser').popover('show');
 }
-$.fetch({
-    cache: false,
-  });
 
