@@ -77,8 +77,8 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'igram.wsgi.application'
-ASGI_APPLICATION = "igram.asgi.application"
+# WSGI_APPLICATION = 'igram.wsgi.application'
+# ASGI_APPLICATION = "igram.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
