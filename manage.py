@@ -2,11 +2,9 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-from django.conf import settings
 
 def main():
     """Run administrative tasks."""
-    settings.configure()
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'igram.settings')
     try:
         from django.core.management import execute_from_command_line
