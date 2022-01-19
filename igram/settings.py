@@ -163,5 +163,5 @@ CHANNEL_LAYERS = {
 
 LOGIN_URL='handleLogin'
 
-#heroku stuff
-django_heroku.settings(locals())
+# #heroku stuff
+# django_heroku.settings(locals())
