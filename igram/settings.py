@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-k&q47)*=zkl44%y0(y#ko66ryge-(=m1jy6^j%*0$d+9hm(oyl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -151,7 +151,7 @@ MESSAGE_TAGS = {
 }
 
 # Channels
-ASGI_APPLICATION = 'igram.asgi.application'
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -160,6 +160,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
+ASGI_APPLICATION = 'igram.asgi.application'
 
 LOGIN_URL='handleLogin'
 
