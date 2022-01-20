@@ -160,7 +160,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
-ASGI_APPLICATION = 'igram.asgi.application'
+# ASGI_APPLICATION = 'igram.asgi.application'
 
 LOGIN_URL='handleLogin'
 
