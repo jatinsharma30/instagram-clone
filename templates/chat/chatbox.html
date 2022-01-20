@@ -91,6 +91,7 @@ function checkSendBtn(e) {
         const chatSocket = new ReconnectingWebSocket(
             wsStart
             + window.location.host
+            + '/ws/'
             + window.location.pathname
         );
 
