@@ -83,11 +83,14 @@ function checkSendBtn(e) {
             scrollBarEnd();
 
             // console.log(window.location)
-        
+            var loc = window.location
+            var wsStart = "ws://"
+            if (loc.protocol == "https:"){
+                wsStart = "wss://"
+            }
         const chatSocket = new ReconnectingWebSocket(
-            'wss://'
+            wsStart
             + window.location.host
-            + '/ws/'
             + window.location.pathname
         );
 
