@@ -77,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-# WSGI_APPLICATION = 'igram.wsgi.application'
+WSGI_APPLICATION = 'igram.wsgi.application'
 # ASGI_APPLICATION = "igram.asgi.application"
 
 # Database
