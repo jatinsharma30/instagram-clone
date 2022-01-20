@@ -84,12 +84,12 @@ function checkSendBtn(e) {
 
             // console.log(window.location)
         
-        const chatSocket = new ReconnectingWebSocket(
+        {% comment %} const chatSocket = new ReconnectingWebSocket(
             'ws://'
             + window.location.host
             + '/ws/'
             + window.location.pathname
-        );
+        ); {% endcomment %}
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
